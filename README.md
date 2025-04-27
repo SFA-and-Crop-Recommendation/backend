@@ -16,6 +16,7 @@ This project helps recommend the top 5 crops based on soil and weather condition
 Before running the project, install these Python libraries:
 
 ```bash
+pip install notebook
 pip install pandas
 pip install scikit-learn
 pip install tensorflow   # (Make sure your Python version is 3.10 or lower)
