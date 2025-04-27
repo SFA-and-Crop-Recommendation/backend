@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 from train_model import fetch_and_save_commodity_data, train_and_predict_from_csv
 
-def recommend_and_predict_prices(test_params):
+def recommend_and_predict_prices(test_params,params):
     """
     Takes test parameters, recommends crops, predicts future prices, and returns a dictionary.
     """
@@ -28,10 +28,7 @@ def recommend_and_predict_prices(test_params):
     recommended_crops = label_encoder.inverse_transform(top_5_indices)
 
     # Fixed Parameters for price prediction
-    params = {
-        "filters[State]": "West Bengal",
-        "filters[District]": "Kolkata"
-    }
+    
 
     # Predict future prices for each recommended crop
     predicted_prices = {}
