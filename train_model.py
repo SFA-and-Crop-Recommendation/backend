@@ -103,5 +103,5 @@ def train_and_predict_from_csv(filename="commodity_data.csv"):
     future_price_scaled = predictions[-1]
     future_price = scaler.inverse_transform(np.array(future_price_scaled).reshape(-1, 1))[0, 0]
 
-    return future_price
+    return model, scaler, future_price
 

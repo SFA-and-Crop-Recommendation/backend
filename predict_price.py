@@ -8,7 +8,7 @@ def recommend_and_predict_prices(test_params,params):
     Takes test parameters, recommends crops, predicts future prices, and returns a dictionary.
     """
     # Load Crop Recommendation Model
-    with open(r'C:\\Users\\Nejarul\\Desktop\\Project Dataset\\crop_recommendation_model.pkl', 'rb') as f:
+    with open(r'crop_recommendation_model.pkl', 'rb') as f:
         model_pipeline = pickle.load(f)
 
     model = model_pipeline['model']
@@ -28,7 +28,10 @@ def recommend_and_predict_prices(test_params,params):
     recommended_crops = label_encoder.inverse_transform(top_5_indices)
 
     # Fixed Parameters for price prediction
-    
+    # params = {
+    #     "filters[State]": "West Bengal",
+    #     "filters[District]": "Kolkata"
+    # }
 
     # Predict future prices for each recommended crop
     predicted_prices = {}
