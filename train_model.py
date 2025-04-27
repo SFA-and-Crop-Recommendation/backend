@@ -41,7 +41,7 @@ def fetch_and_save_commodity_data(params, commodity_name, filename="commodity_da
 
     # Save to CSV
     df.to_csv(filename, index=False)
-    print(f"Saved {len(df)} records to {filename}")
+    # print(f"Saved {len(df)} records to {filename}")
 import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Input
@@ -105,3 +105,46 @@ def train_and_predict_from_csv(filename="commodity_data.csv"):
 
     return model, scaler, future_price
 
+def train_and_predict_from_csv_map(filename):
+    import pandas as pd
+    import numpy as np
+    from sklearn.preprocessing import MinMaxScaler
+    from keras.models import Sequential
+    from keras.layers import LSTM, Dense
+
+    # Load data
+    df = pd.read_csv(filename)
+    
+    # Assume 'Price' and 'Date' columns exist
+    prices = df['Modal_Price'].values.reshape(-1, 1)
+    dates = pd.to_datetime(df['Arrival_Date'])
+
+    # Scaling
+    scaler = MinMaxScaler()
+    prices_scaled = scaler.fit_transform(prices)
+
+    # Create sequences for LSTM
+    X, y = [], []
+    sequence_length = 6  # 6 months
+    for i in range(len(prices_scaled) - sequence_length):
+        X.append(prices_scaled[i:i+sequence_length])
+        y.append(prices_scaled[i+sequence_length])
+
+    X, y = np.array(X), np.array(y)
+
+    # Build model
+    model = Sequential([
+        LSTM(50, return_sequences=False, input_shape=(X.shape[1], X.shape[2])),
+        Dense(1)
+    ])
+    model.compile(optimizer='adam', loss='mean_squared_error')
+
+    # Train model
+    model.fit(X, y, epochs=50, batch_size=8, verbose=0)
+
+    # Predict prices
+    predicted_scaled = model.predict(X)
+    predicted_prices = scaler.inverse_transform(predicted_scaled).flatten()
+    actual_prices = scaler.inverse_transform(y).flatten()
+
+    return model, scaler, (dates[sequence_length:], actual_prices, predicted_prices)
