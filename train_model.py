@@ -41,7 +41,7 @@ def fetch_and_save_commodity_data(params, commodity_name, filename="commodity_da
 
     # Save to CSV
     df.to_csv(filename, index=False)
-    print(f"Saved {len(df)} records to {filename}")
+    # print(f"Saved {len(df)} records to {filename}")
 import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Input
