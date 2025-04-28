@@ -42,7 +42,7 @@ def recommend_and_predict_prices(test_params,params):
             price_model, price_scaler, predicted_price = train_and_predict_from_csv("commodity_data.csv")
             predicted_prices[crop] = predicted_price
         except ValueError as e:
-            print(f"⚠️ Could not predict for {crop}: {e}")
+            # print(f"⚠️ Could not predict for {crop}: {e}")
             predicted_prices[crop] = 0  # or None if you prefer
 
     return predicted_prices
