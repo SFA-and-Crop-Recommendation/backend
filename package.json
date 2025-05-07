@@ -1,0 +1,18 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "This project helps recommend the top 5 crops based on soil and weather conditions and predicts their market prices after 6 months using machine learning models.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/Server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  }
+}
