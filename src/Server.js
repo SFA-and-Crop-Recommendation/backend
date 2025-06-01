@@ -62,10 +62,10 @@ app.post('/predict', (req, res) => {
 });
 
 app.post('/future-price', (req, res) => {
-    const { filters, crop } = req.body;
+    const { market, crop } = req.body;
 
     const python = spawn('C:/Users/nimai/anaconda3/envs/myenv310/python',
-        [future_price_script, JSON.stringify(filters), crop]);
+        [future_price_script, JSON.stringify(market), crop]);
 
     let result = '';
     let errorOutput = '';
