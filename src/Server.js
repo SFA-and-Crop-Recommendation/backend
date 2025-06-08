@@ -65,7 +65,7 @@ app.post('/future-price', (req, res) => {
     const { market, crop } = req.body;
 
     const python = spawn('C:/Users/nimai/anaconda3/envs/myenv310/python',
-        [future_price_script, JSON.stringify(market), crop]);
+        [future_price_script, JSON.stringify(market), JSON.stringify(crop)]);
 
     let result = '';
     let errorOutput = '';
