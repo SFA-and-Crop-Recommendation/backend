@@ -6,7 +6,7 @@ from io import BytesIO
 from PIL import Image
 import os
 
-model_path = os.path.join(os.path.dirname(__file__), "soil_classifier")
+model_path = os.path.join(os.path.dirname(__file__), "soil_classifier.h5")
 model = load_model(model_path)
 
 
@@ -38,7 +38,7 @@ def predict_soil(image_url, model):
         return f"Error: {e}", 0
 
 # Example usage
-image_url = "http://localhost:3000/uploads/img_1749408475784.jpg"
+image_url = "/uploadedSoilImages/img_1749408475784.jpg"
 pred_class, confidence = predict_soil(image_url, model)
 print(f"Predicted Soil Type: {pred_class}")
 print(f"Confidence: {confidence:.2f}%")

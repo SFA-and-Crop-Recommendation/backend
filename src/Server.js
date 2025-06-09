@@ -3,7 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { spawn } = require('child_process');
 const path = require('path');
-const predict_price = path.join(__dirname, '../predict_price.py');
+const predict_price = path.join(__dirname, '../cropRecommend.py');
 const future_price_script = path.join(__dirname, '../train_model.py');
 const fileUpload = require('express-fileupload');
 const fs = require('fs');
@@ -13,17 +13,18 @@ const app = express();
 const PORT = 3000;
 
 app.use(fileUpload());
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploadedSoilImages', express.static(path.join(__dirname, '../uploadedSoilImages')));
 
 app.use(cors());
 app.use(bodyParser.json());
 
-app.post('/predict', (req, res) => {
-    const { testParams, filters } = req.body;
+// Crop recommendation endpoint
+app.post('/recommandCrops', (req, res) => {
+    const { new_sample } = req.body;
     // console.log('Received request with:', { testParams, filters });
 
     const python = spawn('C:/Users/nimai/anaconda3/envs/myenv310/python',
-        [predict_price, JSON.stringify(testParams), JSON.stringify(filters)]);
+        [predict_price, JSON.stringify(new_sample)]);
 
     // console.log('Spawned Python process with PID:', python.pid);
 
@@ -66,6 +67,7 @@ app.post('/predict', (req, res) => {
     });
 });
 
+// price prediction endpoint
 app.post('/future-price', (req, res) => {
     const { market, crop } = req.body;
 
@@ -132,7 +134,7 @@ app.post('/upload', (req, res) => {
         }
 
         // Return full URL
-        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${uniqueFileName}`;
+        const imageUrl = `${req.protocol}://${req.get('host')}/uploadedSoilImages/${uniqueFileName}`;
         res.json({ message: 'File uploaded successfully', url: imageUrl });
     });
 });
