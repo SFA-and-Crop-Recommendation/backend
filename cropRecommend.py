@@ -1,66 +1,64 @@
-from trainedModel import crop_profit_recommendation_with_risk
-import pandas as pd
-import pickle
 import warnings
+import pandas as pd
 import numpy as np
-def cropProfit(new_sample):
+import pickle
+from trainedModel import crop_profit_recommendation_with_risk
 
+def cropProfit(new_sample):
     warnings.filterwarnings("ignore", message="X does not have valid feature names")
 
-
-    # Load your dataset
+    # Load dataset and pretrained model pipeline
     df = pd.read_csv("crop_prices.csv")
     with open('crop_recommendation_model.pkl', 'rb') as f:
         pipeline = pickle.load(f)
-    crops = []
 
-    # Extract components
     model = pipeline['model']
     scaler = pipeline['scaler']
     label_encoder = pipeline['label_encoder']
     feature_columns = pipeline['feature_columns']
 
-    # New sample input (N, P, K, Temperature, Humidity, Ph, Rain)
-    new_sample = [90, 42, 43, 20.87, 82.00, 6.5, 200.0]
+    # Prepare input sample
     new_sample_df = pd.DataFrame([new_sample], columns=feature_columns)
     new_sample_scaled = scaler.transform(new_sample_df)
+    pred_proba = model.predict_proba(new_sample_scaled)[0]
 
-    # Predict probabilities
-    pred_proba = model.predict_proba(new_sample_scaled)
-    top_5_indices = np.argsort(pred_proba[0])[::-1][:5]
+    # Select crops with >50% probability
+    valid_indices = np.where(pred_proba > 0.5)[0]
+    if len(valid_indices) == 0:
+        print("No crops with probability > 50% found.")
+        return []
+
+    sorted_indices = valid_indices[np.argsort(pred_proba[valid_indices])[::-1]]
+    top_5_indices = sorted_indices[:5]
     top_5_crops = label_encoder.inverse_transform(top_5_indices)
 
-    print("🌾 Top 5 Recommended Crops:")
-    for i, crop in enumerate(top_5_crops, 1):
-        print(f"{i}. {crop}")
-
-    # Assign predicted crops for market recommendation
     crops = top_5_crops.tolist()
 
+    # If only one crop, just return its name
+    if len(crops) == 1:
+        print(crops[0])
+        return crops
 
-    # Define crops
-
-
-    # Get all unique markets from Kolkata
+    # Get all Kolkata markets from dataset
     KolkataMarkets = df["Market"].unique().tolist()
 
-    # Load the model pipeline (make sure this file exists and is trained)
-    with open(r'crop_recommendation_model.pkl', 'rb') as f:
-        model_pipeline = pickle.load(f)
-
-    # Collect recommendations
     recommendations = []
-
     for market in KolkataMarkets:
         try:
             result = crop_profit_recommendation_with_risk(df, crops, market)
             if result:
-                recommendations.extend(result)  # assuming result is a list of dicts
+                recommendations.extend(result)
         except Exception as e:
             print(f"Skipping market {market} due to error: {e}")
 
-    # Convert to DataFrame if needed
-    recommendations_df = pd.DataFrame(recommendations)
-
-    # Print or save results
-    print(recommendations_df.to_json(orient='records', indent=2))
+    # Handle output: only crop names expected
+    if isinstance(recommendations, list) and all(isinstance(crop, str) for crop in recommendations):
+        print(recommendations)
+        return recommendations
+    elif isinstance(recommendations, list) and all(isinstance(crop, dict) and "Crop" in crop for crop in recommendations):
+        crop_names = list({r["Crop"] for r in recommendations})
+        print(crop_names)
+        return crop_names
+    else:
+        print("Unexpected format in recommendations.")
+        return []
