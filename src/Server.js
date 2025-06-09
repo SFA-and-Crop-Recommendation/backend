@@ -5,6 +5,7 @@ const { spawn } = require('child_process');
 const path = require('path');
 const predict_price = path.join(__dirname, '../cropRecommend.py');
 const future_price_script = path.join(__dirname, '../train_model.py');
+const predict_soil = path.join(__dirname, '../predict_Soil.py');
 const fileUpload = require('express-fileupload');
 const fs = require('fs');
 
@@ -21,30 +22,22 @@ app.use(bodyParser.json());
 // Crop recommendation endpoint
 app.post('/recommandCrops', (req, res) => {
     const { new_sample } = req.body;
-    // console.log('Received request with:', { testParams, filters });
 
     const python = spawn('C:/Users/nimai/anaconda3/envs/myenv310/python',
         [predict_price, JSON.stringify(new_sample)]);
-
-    // console.log('Spawned Python process with PID:', python.pid);
 
     let result = '';
     let errorOutput = '';
 
     python.stdout.on('data', (data) => {
-        // console.log('Python stdout:', data.toString());
         result += data.toString();
     });
 
     python.stderr.on('data', (data) => {
-        // console.error('Python stderr:', data.toString());
         errorOutput += data.toString();
     });
 
     python.on('close', (code) => {
-        // console.log(`Python process exited with code ${code}`);
-        // console.log('Result:', result);
-        // console.log('Errors:', errorOutput);
 
         if (code !== 0 || !result.trim()) {
             return res.status(500).json({
@@ -127,6 +120,7 @@ app.post('/upload', (req, res) => {
     const uniqueFileName = `img_${timestamp}${ext}`;
     const uploadPath = path.join(uploadDir, uniqueFileName);
 
+    // Upload image and return full URL
     file.mv(uploadPath, (err) => {
         if (err) {
             console.error(err);
@@ -136,6 +130,48 @@ app.post('/upload', (req, res) => {
         // Return full URL
         const imageUrl = `${req.protocol}://${req.get('host')}/uploadedSoilImages/${uniqueFileName}`;
         res.json({ message: 'File uploaded successfully', url: imageUrl });
+    });
+});
+
+app.post('/predictSoil', (req, res) => {
+    const { imageUrl } = req.body;
+    if (!imageUrl) {
+        return res.status(400).json({ error: 'No image URL provided' });
+    }
+    // Analyze the uploaded image
+    const python = spawn('C:/Users/nimai/anaconda3/envs/env310/python',
+        [predict_soil, imageUrl]);
+
+    let result = '';
+    let errorOutput = '';
+
+    python.stdout.on('data', (data) => {
+        result += data.toString();
+    });
+
+    python.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+    });
+
+    python.on('close', (code) => {
+        if (code !== 0 || !result.trim()) {
+            return res.status(500).json({
+                error: 'Python script failed',
+                exitCode: code,
+                stderr: errorOutput,
+                stdout: result
+            });
+        }
+
+        try {
+            res.json(JSON.parse(result));
+        } catch (error) {
+            res.status(500).json({
+                error: 'Failed to parse Python output',
+                rawOutput: result,
+                parseError: error.message
+            });
+        }
     });
 });
 
