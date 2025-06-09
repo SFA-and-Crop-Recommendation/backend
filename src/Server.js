@@ -5,10 +5,15 @@ const { spawn } = require('child_process');
 const path = require('path');
 const predict_price = path.join(__dirname, '../predict_price.py');
 const future_price_script = path.join(__dirname, '../train_model.py');
+const fileUpload = require('express-fileupload');
+const fs = require('fs');
 
 
 const app = express();
 const PORT = 3000;
+
+app.use(fileUpload());
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -97,6 +102,38 @@ app.post('/future-price', (req, res) => {
                 parseError: error.message
             });
         }
+    });
+});
+
+// Upload endpoint
+app.post('/upload', (req, res) => {
+    const file = req.files?.file;
+
+    if (!file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Ensure uploads directory exists
+    const uploadDir = path.join(__dirname, '../uploadedSoilImages');
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    // Create a unique filename using timestamp
+    const timestamp = Date.now();
+    const ext = path.extname(file.name);
+    const uniqueFileName = `img_${timestamp}${ext}`;
+    const uploadPath = path.join(uploadDir, uniqueFileName);
+
+    file.mv(uploadPath, (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Failed to upload file' });
+        }
+
+        // Return full URL
+        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${uniqueFileName}`;
+        res.json({ message: 'File uploaded successfully', url: imageUrl });
     });
 });
 
